@@ -47,7 +47,7 @@ packages/
     lib/src/api/conduit_api.dart
                               @HttpClient ConduitApi  ->  conduit_api.g.dart
   conduit_server/
-    migrations/               PostgreSQL schema, embedded by dust db build
+    migrations/               SQLx reversible pairs (sqlx migrate add -r); Dust embeds the .up.sql
     .dust_sql/                committed query metadata for offline SQL checks
     lib/src/db/               FromRow rows (dust build), @SqlxDao repos (dust db build)
     lib/src/features/         handlers: users, profiles, articles, comments
@@ -112,7 +112,41 @@ dust check --db --offline --root packages/conduit_server     # SQL, with no data
 `dust db build` asks PostgreSQL to describe every `@Query` against the
 migrated schema before it writes any code, so a misspelled column is a build
 error. The results are cached in `.dust_sql/`, which is committed, so CI can
-run the check with no database.
+run the check with no database. Run `dust` against each package with `--root`:
+at the workspace root it scans nothing and still reports success.
+
+### Migrations
+
+Migrations are SQLx reversible pairs, one table each, named the way
+[`sqlx migrate add -r`](https://github.com/launchbadge/sqlx/tree/main/sqlx-cli)
+names them:
+
+```text
+packages/conduit_server/migrations/
+  20260926000001_create_users.up.sql      20260926000001_create_users.down.sql
+  20260926000002_create_follows.up.sql    ...
+```
+
+```bash
+# A new pair (or create the two files by hand)
+sqlx migrate add -r --source packages/conduit_server/migrations add_user_location
+
+# Embed it. --clean because Dust's build cache does not track migration
+# files: without it an edited migration can be skipped (see below).
+dust build --clean --root packages/conduit_server
+DUST_DATABASE_URL=... dust db build --root packages/conduit_server
+
+# Undo the latest applied migration(s) in development
+DATABASE_URL=postgres://conduit:conduit@localhost:5432/conduit tool/db_revert.sh [count]
+```
+
+The server applies pending `.up.sql` files at startup through Dust, which
+records them in `__dust_schema_migrations` and never runs a `.down.sql`.
+[`tool/db_revert.sh`](tool/db_revert.sh) runs the matching down migration and
+deletes that record in one transaction, so the next start re-applies it.
+`sqlx migrate run` / `revert` also work on these files (verified with sqlx-cli
+0.9: run, revert to version 0, run). SQLx keeps its own `_sqlx_migrations`
+table, though, so use one tool per database.
 
 ## Tests
 
@@ -183,25 +217,60 @@ only change to the upstream suite is documented in [`e2e/README.md`](e2e/README.
   [`icons.css`](packages/conduit_web/web/icons.css), and nothing is loaded from a
   CDN.
 
-### Dust notes from building this
+### Dust findings
 
-This was also a test drive of Dust 0.2.0 across all three layers. It was a
-smooth experience, and these were the rough edges:
+This was also a test drive of Dust 0.2.0, which is still `main`. Each item
+below was reproduced on its own, then checked against the open and closed
+issues on [y3l1n4ung/dust](https://github.com/y3l1n4ung/dust/issues).
 
-1. **SQLx alias markers don't work at runtime on PostgreSQL.** `count(*) AS
-   "total!"` validates, and the generator reads the column as `total`, but
-   `dust_db_postgres` indexes result columns by their literal name `total!`, so
-   the read fails with *"result has no column"*. PostgreSQL's nullability
-   inference was accurate enough here that no markers were needed.
-2. `FromRow` has no direct `List<T>` field support. A `TEXT[]` column goes
-   through a small `SqlxTryFrom` converter
+**Not in the tracker yet**
+
+1. **Nullability alias markers break at runtime** (both drivers). `docs/usage/db.md`
+   and #501 have `count(*) AS "total!"` override nullability, and the generator
+   emits `row.read<int>('total')` with the marker stripped. Neither
+   `dust_db_postgres` nor `dust_db_sqlite3` strips it when indexing result
+   columns, so the read fails. For `SELECT 42 AS "total!"`, Postgres says
+   *`result has no column total`* and SQLite says *`Column total is null`*
+   (it isn't; it's 42). This project uses no markers.
+2. **`dust db build` ignores edited migrations once its cache is warm.** The
+   cache key is the Dart library's source hash plus package config and tool
+   (`matches_cache_metadata` in `dust_driver`); migration files aren't in it.
+   After an edit, `dust db build` reports `cached: 5` and the generated
+   `database.g.dart` still embeds the old SQL. `dust check --db --offline`
+   then fails with a misleading *`missing entry for UsersRepo.insert`*. Only an
+   online `dust check --db` reports it as stale. It's a sibling of #514, which
+   fixed the cross-library case. Workaround: `dust build --clean`.
+3. **At a pub workspace root, `dust build` and `dust check` scan 0 libraries and
+   report success**, so a CI step run from the repository root is green without
+   checking anything. `dust doctor` says `workspace: ok libraries: 0`.
+4. **dust_server's recommended API + web app setup turns API typos into 200s.**
+   With `nest('/api', api)` and `fallback(staticFiles(dir, html: true))`, as
+   in `docs/dust_server/web-apps.md`, `GET /api/nots` returns the HTML shell with
+   status 200 instead of a JSON 404. A `fallback` on the `/api` router doesn't
+   help, because only the outermost one is read. Fixed here in the root
+   fallback.
+5. `--root .` from inside a workspace member fails with *`no shared package
+   configuration was found above it`*; the same directory given as an
+   absolute path works.
+6. `FromRow` can't map `List<T>` fields, although the Postgres driver already
+   decodes arrays. `TEXT[]` needs a `SqlxTryFrom` converter
    ([`TextArray`](packages/conduit_server/lib/src/db/rows.dart)).
-3. `@Validate(regex:, message:)` must be string literals, not `const`
-   references.
-4. dust_server reads `fallback` only from the outermost router, so a JSON 404
-   for unknown `/api/*` paths is carved out in the root fallback, next to the
-   web app.
-5. In a pub workspace, `dust build` runs per package (`--root packages/x`).
+7. `@Validate(regex:, message:)` accepts only string literals; a `const`
+   reference fails with *`expects a string literal`*, which the validation
+   guide doesn't mention.
+
+**Already tracked, and hit here too:** naming the violated constraint (#570;
+this server reads `ServerException.constraintName` directly), mapping database
+failures to HTTP statuses (#571; done by hand in `ApiError`), and generated
+routes for handler annotations (#548; the server uses the runtime API).
+Reversible migrations are supported (#257), but there's no revert command yet,
+hence [`tool/db_revert.sh`](tool/db_revert.sh).
+
+**Not Dust bugs, for completeness:** Dio's interceptor chain yielding to the
+event loop, which the browser handles in
+[`unload_safe.dart`](packages/conduit_web/lib/src/unload_safe.dart), and
+`clock_timestamp()` defaults that differed between two columns of one row (my
+schema mistake, now `now()`).
 
 ## Licenses
 
