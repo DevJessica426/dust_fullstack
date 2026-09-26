@@ -4,7 +4,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "0f1ca814a727a1da",
       "sql": "\nUPDATE users\nSET username = $2, email = $3, password_hash = $4, bio = $5, image = $6\nWHERE id = $1\nRETURNING id, username, email, password_hash, bio, image\n",
       "user_parameter_count": 6,
@@ -23,7 +23,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "1ae0668e1064eb42",
       "sql": "\nSELECT u.id, u.username, u.bio, u.image,\n       EXISTS (\n         SELECT 1 FROM follows f\n         WHERE f.follower_id = $2 AND f.followee_id = u.id\n       ) AS following\nFROM users u\nWHERE u.username = $1\n",
       "user_parameter_count": 2,
@@ -41,7 +41,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "397b73366171e3c8",
       "sql": "\nSELECT id, username, email, password_hash, bio, image FROM users\nWHERE lower(email) = lower($1)\n",
       "user_parameter_count": 1,
@@ -60,7 +60,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "4a3004535588187f",
       "sql": "\nSELECT id, username, email, password_hash, bio, image FROM users\nWHERE id = $1\n",
       "user_parameter_count": 1,
@@ -79,7 +79,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "9bc9e89a104130f0",
       "sql": "\nINSERT INTO users (username, email, password_hash)\nVALUES ($1, $2, $3)\nRETURNING id, username, email, password_hash, bio, image\n",
       "user_parameter_count": 3,
@@ -98,7 +98,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "9e67f820bdd0a5ac",
       "sql": "\nDELETE FROM follows WHERE follower_id = $1 AND followee_id = $2\n",
       "user_parameter_count": 2,
@@ -110,7 +110,7 @@
     {
       "driver": "postgres",
       "migrations": "./migrations",
-      "schema_hash": "103be9918f307b5b",
+      "schema_hash": "0fb64e562d150b6f",
       "sql_hash": "f3b88fe1693a6d47",
       "sql": "\nINSERT INTO follows (follower_id, followee_id) VALUES ($1, $2)\nON CONFLICT DO NOTHING\n",
       "user_parameter_count": 2,
