@@ -4,6 +4,8 @@ import 'profile.dart';
 
 part 'article.g.dart';
 
+// TODO(dust#590): `@Validate` takes string literals only; see user.dart.
+
 /// One article, body included, as `/articles/{slug}` returns it.
 @Derive([ToString(), Eq(), CopyWith(), Serialize(), Deserialize()])
 final class Article with _$Article {

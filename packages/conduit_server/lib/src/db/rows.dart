@@ -9,6 +9,8 @@ part 'rows.g.dart';
 // `conduit_shared`, built from these in `mapping.dart`, so a column that must
 // never leave the database (a password hash) has no path to the wire.
 
+// TODO(dust#589): drop this converter, and the `@Sqlx(tryFrom:)` on each list
+// field, once `FromRow` maps `List<T>` itself.
 /// Reads a PostgreSQL `TEXT[]` column as a Dart list.
 ///
 /// Row fields map scalars directly; a list goes through a converter. The

@@ -10,6 +10,10 @@
 # revert` can't undo those either: SQLx keeps its own `_sqlx_migrations` table.
 # This runs the matching down migration and deletes Dust's record in one
 # transaction, so the next server start re-applies it cleanly.
+#
+# TODO(dust): replace this with Dust's own revert command if one ships. No
+# issue asks for it yet; dust#257 only keeps `.down.sql` files for future
+# downgrade tooling.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

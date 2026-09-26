@@ -4,6 +4,8 @@ import 'profile.dart';
 
 part 'comment.g.dart';
 
+// TODO(dust#590): `@Validate` takes string literals only; see user.dart.
+
 /// A comment on an article.
 @Derive([ToString(), Eq(), Serialize(), Deserialize()])
 final class Comment with _$Comment {

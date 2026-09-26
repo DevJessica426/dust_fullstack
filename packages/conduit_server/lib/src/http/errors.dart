@@ -51,6 +51,9 @@ final class ApiError implements IntoResponse {
 ApiError? invalid(ValidationResult result) =>
     result.isValid ? null : ApiError.invalid(result.errors);
 
+// TODO(dust#570): on Dust 0.3, detect the duplicate with
+// `error.kind == SqlxErrorKind.uniqueViolation`. The constraint's name, which
+// says which field is taken, still has to come from `pg.ServerException`.
 /// The unique index a failed write collided with, if that is what failed.
 ///
 /// SQLSTATE `23505` is `unique_violation` in every PostgreSQL version and
@@ -63,6 +66,9 @@ String? uniqueViolation(SqlxError error) {
   return null;
 }
 
+// TODO(dust#571): on Dust 0.3, throw `Rejection.fromSqlxError(error)` here.
+// Its 409 is `{"error": "Conflict"}`, so `ApiError.taken`, which names the
+// field, stays for duplicates.
 extension ResultOrThrow<T> on Result<T, SqlxError> {
   /// The value, or the database error thrown.
   ///

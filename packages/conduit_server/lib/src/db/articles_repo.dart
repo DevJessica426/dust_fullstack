@@ -72,6 +72,8 @@ LIMIT $4 OFFSET $5
     int viewerId,
   );
 
+  // TODO(dust#584): mark the counts non-null (`count(*) AS "count!"`) once the
+  // drivers strip the marker; today a marked column can't be read at run time.
   /// How many articles [list] would page through with the same filters.
   @Query(r'''
 SELECT count(*) AS count

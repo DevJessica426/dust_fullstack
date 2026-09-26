@@ -113,7 +113,10 @@ dust check --db --offline --root packages/conduit_server     # SQL, with no data
 migrated schema before it writes any code, so a misspelled column is a build
 error. The results are cached in `.dust_sql/`, which is committed, so CI can
 run the check with no database. Run `dust` against each package with `--root`:
-at the workspace root it scans nothing and still reports success.
+at the workspace root it scans nothing and still reports success. (TODO
+[dust#586]: a plain `dust build` / `dust check` at the root once it covers the
+members. Give `--root` a path from the repository root, not `.` inside a
+member: [dust#588].)
 
 ### Migrations
 
@@ -133,6 +136,7 @@ sqlx migrate add -r --source packages/conduit_server/migrations add_user_locatio
 
 # Embed it. --clean because Dust's build cache does not track migration
 # files: without it an edited migration can be skipped (see below).
+# TODO(dust#585): drop --clean once migrations are part of the cache key.
 dust build --clean --root packages/conduit_server
 DUST_DATABASE_URL=... dust db build --root packages/conduit_server
 
@@ -219,9 +223,11 @@ only change to the upstream suite is documented in [`e2e/README.md`](e2e/README.
 
 ### Dust findings
 
-This was also a test drive of Dust 0.2.0, which is still `main`. Each item
+This was also a test drive of Dust 0.2.0, the latest release. Each item
 below was reproduced on its own and checked against the open and closed
-issues on [y3l1n4ung/dust](https://github.com/y3l1n4ung/dust/issues).
+issues on [y3l1n4ung/dust](https://github.com/y3l1n4ung/dust/issues). Every
+workaround in the code is marked with the issue it waits on;
+`git grep -n 'TODO(dust'` lists them.
 
 **Reported from this project**
 
@@ -262,13 +268,16 @@ issues on [y3l1n4ung/dust](https://github.com/y3l1n4ung/dust/issues).
    reference fails with *`expects a string literal`*, which the validation
    guide doesn't mention ([dust#590]).
 
-**Already tracked, and hit here too:** naming the violated constraint
-([dust#570]; this server reads `ServerException.constraintName` directly),
-mapping database failures to HTTP statuses ([dust#571]; done by hand in
-`ApiError`), and generated routes for handler annotations ([dust#548]; the
-server uses the runtime API). Reversible migrations are supported
-([dust#257]), but there's no revert command yet, hence
-[`tool/db_revert.sh`](tool/db_revert.sh).
+**Already tracked, and hit here too:** telling a duplicate apart from other
+database failures ([dust#570]; this server reads SQLSTATE `23505` and
+`ServerException.constraintName` directly), mapping database failures to HTTP
+statuses ([dust#571]; done by hand in `ApiError`), and generated routes for
+handler annotations ([dust#548], open; the server uses the runtime API).
+[dust#570] and [dust#571] are fixed on `main` for 0.3.0, which isn't
+released yet: `SqlxError.kind` and `Rejection.fromSqlxError`. The constraint's
+name still comes from the driver, since `kind` doesn't carry it. Reversible
+migrations are supported ([dust#257]), but there's no revert command yet,
+hence [`tool/db_revert.sh`](tool/db_revert.sh).
 
 [dust#257]: https://github.com/y3l1n4ung/dust/issues/257
 [dust#501]: https://github.com/y3l1n4ung/dust/issues/501

@@ -22,6 +22,8 @@ Router buildApp({
   void Function(Object error, StackTrace stack)? onError,
   void Function(AccessRecord record)? accessLog,
 }) {
+  // TODO(dust#548): generate the route modules from handler annotations once
+  // dust_server can; each feature's Router is written by hand today.
   final api = Router()
     ..merge(userRoutes())
     ..merge(profileRoutes())
@@ -56,6 +58,8 @@ Router buildApp({
     // outermost router's fallback, so the /api carve-out lives here — an
     // unknown API path is a client's typo and must stay a JSON 404, not a
     // 200 with an HTML page.
+    // TODO(dust#587): drop the carve-out once dust_server keeps unmatched
+    // paths under a nested prefix out of the outer fallback.
     final web = staticFiles(
       webRoot,
       html: true,

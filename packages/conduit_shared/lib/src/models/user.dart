@@ -5,6 +5,10 @@ part 'user.g.dart';
 // Every required text field uses `regex: r'\S'` — at least one visible
 // character — rather than `Length(min: 1)`, which would accept `"   "`.
 // "can't be blank" is the message the RealWorld spec asserts on.
+//
+// TODO(dust#590): share the pattern and the messages as constants, here and
+// in article.dart and comment.dart, once `@Validate` accepts const
+// references. It takes string literals only, so each rule repeats them.
 
 /// The signed-in user, as `/users`, `/users/login` and `/user` return it.
 @Derive([ToString(), Eq(), CopyWith(), Serialize(), Deserialize()])
