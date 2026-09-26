@@ -30,20 +30,25 @@ void main() {
         image: 'https://example.com/a.png',
       );
 
-      expect(UserEnvelope.fromJson(const UserEnvelope(user: user).toJson()),
-          const UserEnvelope(user: user));
+      expect(
+        UserEnvelope.fromJson(const UserEnvelope(user: user).toJson()),
+        const UserEnvelope(user: user),
+      );
     });
   });
 
   group('validation messages', () {
     List<String> problems(ValidationResult result, String field) => [
-          for (final error in result.errors)
-            if (error.field == field) error.message,
-        ];
+      for (final error in result.errors)
+        if (error.field == field) error.message,
+    ];
 
     test("blank registration fields say can't be blank first", () {
-      final result = const NewUser(username: ' ', email: '', password: '')
-          .validate();
+      final result = const NewUser(
+        username: ' ',
+        email: '',
+        password: '',
+      ).validate();
 
       expect(problems(result, 'username'), ["can't be blank"]);
       expect(problems(result, 'email').first, "can't be blank");
@@ -51,8 +56,11 @@ void main() {
     });
 
     test('passwords follow NIST: 8 is enough, 7 is not, 64 is fine', () {
-      NewUser withPassword(String password) =>
-          NewUser(username: 'ada', email: 'ada@example.com', password: password);
+      NewUser withPassword(String password) => NewUser(
+        username: 'ada',
+        email: 'ada@example.com',
+        password: password,
+      );
 
       expect(withPassword('short7c').validate().isValid, isFalse);
       expect(withPassword('bonjour1').validate().isValid, isTrue);
@@ -61,22 +69,31 @@ void main() {
 
     test('an update validates only the fields it carries', () {
       expect(const UpdateUser(bio: '').validate().isValid, isTrue);
-      expect(problems(const UpdateUser(email: '').validate(), 'email').first,
-          "can't be blank");
+      expect(
+        problems(const UpdateUser(email: '').validate(), 'email').first,
+        "can't be blank",
+      );
       expect(const UpdateUser(password: 'short').validate().isValid, isFalse);
     });
 
     test('an article needs a title, description and body', () {
-      final result =
-          const NewArticle(title: '', description: '', body: '').validate();
+      final result = const NewArticle(
+        title: '',
+        description: '',
+        body: '',
+      ).validate();
 
-      expect(result.errors.map((e) => e.field).toSet(),
-          {'title', 'description', 'body'});
+      expect(result.errors.map((e) => e.field).toSet(), {
+        'title',
+        'description',
+        'body',
+      });
     });
 
     test('a comment needs a body', () {
-      expect(problems(const NewComment(body: '  ').validate(), 'body'),
-          ["can't be blank"]);
+      expect(problems(const NewComment(body: '  ').validate(), 'body'), [
+        "can't be blank",
+      ]);
     });
   });
 
@@ -89,8 +106,9 @@ void main() {
 
     test('an empty tag list is sent, so it can clear the tags', () {
       expect(
-        const UpdateArticleRequest(article: UpdateArticle(tagList: []))
-            .toJson(),
+        const UpdateArticleRequest(
+          article: UpdateArticle(tagList: []),
+        ).toJson(),
         {
           'article': {'tagList': <String>[]},
         },
@@ -165,21 +183,38 @@ void main() {
     }
 
     test("reads the API's errors object", () {
-      final failure = ConduitFailure.from(refused(422, {
-        'errors': {
-          'title': ["can't be blank"],
-        },
-      }));
+      final failure = ConduitFailure.from(
+        refused(422, {
+          'errors': {
+            'title': ["can't be blank"],
+          },
+        }),
+      );
 
       expect(failure.status, 422);
       expect(failure.errors.messages, ["title can't be blank"]);
+    });
+
+    test('no response at all reads "Unable to connect"', () {
+      final failure = ConduitFailure.from(
+        DioException.connectionError(
+          requestOptions: RequestOptions(path: '/tags'),
+          reason: 'refused',
+        ),
+      );
+
+      expect(failure.status, 0);
+      expect(failure.isClientError, isFalse);
+      expect(failure.errors.errors[ConduitFailure.network], [
+        'Unable to connect to the server',
+      ]);
     });
 
     test('falls back when the body is not the API shape', () {
       final failure = ConduitFailure.from(refused(502, '<html>bad gateway'));
 
       expect(failure.status, 502);
-      expect(failure.errors.errors.keys, ['network']);
+      expect(failure.errors.errors.keys, ['server']);
     });
   });
 }

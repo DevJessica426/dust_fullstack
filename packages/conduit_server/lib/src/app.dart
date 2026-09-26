@@ -56,11 +56,24 @@ Router buildApp({
     // outermost router's fallback, so the /api carve-out lives here — an
     // unknown API path is a client's typo and must stay a JSON 404, not a
     // 200 with an HTML page.
-    final web = staticFiles(webRoot, html: true);
+    final web = staticFiles(
+      webRoot,
+      html: true,
+      // The Dart build emits fixed names rather than content hashes, so the
+      // stylesheets and images are revalidated like the document and script.
+      revalidate: const {
+        ...defaultRevalidatedFiles,
+        'styles.css',
+        'icons.css',
+        'favicon.svg',
+        'default-avatar.svg',
+      },
+    );
     app.fallback(
       (request) => request.requestedUri.path.startsWith('/api/')
-          ? Rejection.notFound('no route for ${request.requestedUri.path}')
-              .intoResponse()
+          ? Rejection.notFound(
+              'no route for ${request.requestedUri.path}',
+            ).intoResponse()
           : web(request),
     );
   }

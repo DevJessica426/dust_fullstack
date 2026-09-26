@@ -115,18 +115,27 @@ final class NewArticle with _$NewArticle {
       _$NewArticleFromJson(json);
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 200), message: 'is too long (maximum is 200 characters)')
+  @Validate(
+    length: Length(max: 200),
+    message: 'is too long (maximum is 200 characters)',
+  )
   final String title;
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 500), message: 'is too long (maximum is 500 characters)')
+  @Validate(
+    length: Length(max: 500),
+    message: 'is too long (maximum is 500 characters)',
+  )
   final String description;
 
   @Validate(regex: r'\S', message: "can't be blank")
   final String body;
 
   @SerDe(defaultValue: <String>[])
-  @Validate(length: Length(max: 20), message: 'has too many tags (maximum is 20)')
+  @Validate(
+    length: Length(max: 20),
+    message: 'has too many tags (maximum is 20)',
+  )
   final List<String> tagList;
 }
 
@@ -153,26 +162,35 @@ final class UpdateArticle with _$UpdateArticle {
       _$UpdateArticleFromJson(json);
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 200), message: 'is too long (maximum is 200 characters)')
+  @Validate(
+    length: Length(max: 200),
+    message: 'is too long (maximum is 200 characters)',
+  )
   final String? title;
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 500), message: 'is too long (maximum is 500 characters)')
+  @Validate(
+    length: Length(max: 500),
+    message: 'is too long (maximum is 500 characters)',
+  )
   final String? description;
 
   @Validate(regex: r'\S', message: "can't be blank")
   final String? body;
 
-  @Validate(length: Length(max: 20), message: 'has too many tags (maximum is 20)')
+  @Validate(
+    length: Length(max: 20),
+    message: 'has too many tags (maximum is 20)',
+  )
   final List<String>? tagList;
 
   /// Only the fields that were set.
   Map<String, Object?> toJson() => {
-        if (title != null) 'title': title,
-        if (description != null) 'description': description,
-        if (body != null) 'body': body,
-        if (tagList != null) 'tagList': tagList,
-      };
+    if (title != null) 'title': title,
+    if (description != null) 'description': description,
+    if (body != null) 'body': body,
+    if (tagList != null) 'tagList': tagList,
+  };
 }
 
 /// `{"article": {...changed fields}}`.

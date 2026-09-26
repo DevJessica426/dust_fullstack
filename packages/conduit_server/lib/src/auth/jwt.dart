@@ -10,7 +10,7 @@ import 'package:crypto/crypto.dart';
 /// the header is checked against a constant instead.
 final class JwtCodec {
   JwtCodec(List<int> secret, {this.lifetime = const Duration(days: 30)})
-      : _hmac = Hmac(sha256, secret) {
+    : _hmac = Hmac(sha256, secret) {
     if (secret.length < 32) {
       throw ArgumentError.value(
         secret.length,

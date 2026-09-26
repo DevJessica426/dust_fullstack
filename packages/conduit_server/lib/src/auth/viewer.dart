@@ -100,8 +100,9 @@ Future<Result<Viewer, Rejection>> _resolve(
   String token,
 ) async {
   final auth = await const StateExtractable<Auth>().extract(request);
-  final database =
-      await const StateExtractable<ConduitDatabase>().extract(request);
+  final database = await const StateExtractable<ConduitDatabase>().extract(
+    request,
+  );
   if ((auth, database) case (Ok(value: final auth), Ok(value: final db))) {
     final userId = auth.jwt.verify(token);
     if (userId == null) return const Err(_invalid);

@@ -25,9 +25,9 @@ Future<Result<CommentsList, ApiError>> listComments(Request request) async {
   final article = (await ArticlesRepo(db.connection).keyBySlug(slug)).orThrow;
   if (article == null) return Err(ApiError.notFound('article'));
 
-  final rows = (await CommentsRepo(db.connection)
-          .forArticle(article.id, viewer?.id ?? 0))
-      .orThrow;
+  final rows = (await CommentsRepo(
+    db.connection,
+  ).forArticle(article.id, viewer?.id ?? 0)).orThrow;
   return Ok(CommentsList(comments: rows.map(commentOf).toList()));
 }
 
@@ -43,9 +43,9 @@ Future<Result<CommentEnvelope, ApiError>> addComment(Request request) async {
   final input = (await request.body(NewCommentRequest.fromJson)).comment;
   if (invalid(input.validate()) case final error?) return Err(error);
 
-  final written = (await CommentsRepo(db.connection)
-          .insert(article.id, viewer.id, input.body.trim()))
-      .orThrow;
+  final written = (await CommentsRepo(
+    db.connection,
+  ).insert(article.id, viewer.id, input.body.trim())).orThrow;
   return Ok(
     CommentEnvelope(
       comment: Comment(

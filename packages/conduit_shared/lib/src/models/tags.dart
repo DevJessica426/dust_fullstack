@@ -26,16 +26,16 @@ final class ApiErrors with _$ApiErrors {
 
   /// One problem about one thing.
   factory ApiErrors.single(String key, String problem) => ApiErrors(
-        errors: {
-          key: [problem],
-        },
-      );
+    errors: {
+      key: [problem],
+    },
+  );
 
   final Map<String, List<String>> errors;
 
   /// `title can't be blank; body can't be blank` — for a banner or a log.
   List<String> get messages => [
-        for (final MapEntry(:key, :value) in errors.entries)
-          for (final problem in value) '$key $problem',
-      ];
+    for (final MapEntry(:key, :value) in errors.entries)
+      for (final problem in value) '$key $problem',
+  ];
 }

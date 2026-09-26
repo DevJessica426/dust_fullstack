@@ -51,7 +51,8 @@ final class PasswordHasher {
     if (parts.length != 6 || parts[1] != 'argon2id') return false;
     final params = {
       for (final pair in parts[3].split(','))
-        if (pair.split('=') case [final key, final value]) key: int.tryParse(value),
+        if (pair.split('=') case [final key, final value])
+          key: int.tryParse(value),
     };
     final (m, t, p) = (params['m'], params['t'], params['p']);
     if (m == null || t == null || p == null) return false;
@@ -88,7 +89,8 @@ final class PasswordHasher {
   }
 
   // PHC strings use unpadded standard base64.
-  static String _b64(List<int> bytes) => base64.encode(bytes).replaceAll('=', '');
+  static String _b64(List<int> bytes) =>
+      base64.encode(bytes).replaceAll('=', '');
 
   static List<int> _unb64(String text) =>
       base64.decode(text.padRight((text.length + 3) & ~3, '='));

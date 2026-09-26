@@ -37,7 +37,9 @@ Future<ArticlesPage> listArticles(Request request) async {
   final author = await request.query<String?>('author');
   final favorited = await request.query<String?>('favorited');
   final (limit, offset) = await _page(request);
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
 
   final rows = (await articles.list(
     tag,
@@ -46,8 +48,7 @@ Future<ArticlesPage> listArticles(Request request) async {
     limit,
     offset,
     viewer?.id ?? 0,
-  ))
-      .orThrow;
+  )).orThrow;
   final total = (await articles.count(tag, author, favorited)).orThrow;
 
   return ArticlesPage(
@@ -60,7 +61,9 @@ Future<ArticlesPage> listArticles(Request request) async {
 Future<ArticlesPage> feed(Request request) async {
   final viewer = await request.extract<Viewer>(const RequireViewer());
   final (limit, offset) = await _page(request);
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
 
   final rows = (await articles.feed(viewer.id, limit, offset)).orThrow;
   final total = (await articles.feedCount(viewer.id)).orThrow;
@@ -75,7 +78,9 @@ Future<ArticlesPage> feed(Request request) async {
 Future<Result<ArticleEnvelope, ApiError>> readArticle(Request request) async {
   final viewer = await request.extract<Viewer?>(const OptionalViewer());
   final slug = await request.path<String>('slug');
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
 
   return _envelope(articles, slug, viewer?.id ?? 0);
 }
@@ -89,7 +94,9 @@ Future<Result<ArticleEnvelope, ApiError>> createArticle(Request request) async {
   final failures = [...input.validate().errors, ..._tagProblems(tags)];
   if (failures.isNotEmpty) return Err(ApiError.invalid(failures));
 
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
   final slug = await _withUniqueSlug(
     input.title,
     (slug) => articles.insert(
@@ -110,7 +117,9 @@ Future<Result<ArticleEnvelope, ApiError>> createArticle(Request request) async {
 Future<Result<ArticleEnvelope, ApiError>> updateArticle(Request request) async {
   final viewer = await request.extract<Viewer>(const RequireViewer());
   final slug = await request.path<String>('slug');
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
 
   // Found, then allowed, then valid: a stranger editing a missing article is
   // told it is missing, not that their draft has a blank title.
@@ -139,13 +148,13 @@ Future<Result<ArticleEnvelope, ApiError>> updateArticle(Request request) async {
 
   final title = patch.title?.trim() ?? existing.title;
   Future<Result<Object?, SqlxError>> write(String slug) => articles.update(
-        existing.id,
-        slug,
-        title,
-        patch.description?.trim() ?? existing.description,
-        patch.body ?? existing.body,
-        tags ?? existing.tagList,
-      );
+    existing.id,
+    slug,
+    title,
+    patch.description?.trim() ?? existing.description,
+    patch.body ?? existing.body,
+    tags ?? existing.tagList,
+  );
 
   final String newSlug;
   if (title == existing.title) {
@@ -162,7 +171,9 @@ Future<Result<ArticleEnvelope, ApiError>> updateArticle(Request request) async {
 Future<Result<Null, ApiError>> deleteArticle(Request request) async {
   final viewer = await request.extract<Viewer>(const RequireViewer());
   final slug = await request.path<String>('slug');
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
 
   final existing = (await articles.keyBySlug(slug)).orThrow;
   if (existing == null) return Err(ApiError.notFound('article'));
@@ -186,7 +197,9 @@ Future<Result<ArticleEnvelope, ApiError>> _setFavorite(
 }) async {
   final viewer = await request.extract<Viewer>(const RequireViewer());
   final slug = await request.path<String>('slug');
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
 
   final existing = (await articles.keyBySlug(slug)).orThrow;
   if (existing == null) return Err(ApiError.notFound('article'));
@@ -200,7 +213,9 @@ Future<Result<ArticleEnvelope, ApiError>> _setFavorite(
 
 /// `GET /tags` — every tag in use, most used first.
 Future<TagsList> listTags(Request request) async {
-  final articles = ArticlesRepo((await request.state<ConduitDatabase>()).connection);
+  final articles = ArticlesRepo(
+    (await request.state<ConduitDatabase>()).connection,
+  );
   final rows = (await articles.tags()).orThrow;
   return TagsList(tags: [for (final row in rows) row.tag]);
 }
@@ -246,10 +261,10 @@ Iterable<ValidationError> _tagProblems(List<String> tags) sync* {
 
 /// Which keys a JSON object carried as an explicit `null`.
 Set<String> _nullKeysOf(Object? json) => {
-      if (json is Map)
-        for (final MapEntry(:key, :value) in json.entries)
-          if (key is String && value == null) key,
-    };
+  if (json is Map)
+    for (final MapEntry(:key, :value) in json.entries)
+      if (key is String && value == null) key,
+};
 
 final _random = Random.secure();
 
@@ -292,6 +307,6 @@ Future<String> _withUniqueSlug(
 }
 
 String _suffix() => [
-      for (var i = 0; i < 6; i++)
-        'abcdefghijklmnopqrstuvwxyz0123456789'[_random.nextInt(36)],
-    ].join();
+  for (var i = 0; i < 6; i++)
+    'abcdefghijklmnopqrstuvwxyz0123456789'[_random.nextInt(36)],
+].join();

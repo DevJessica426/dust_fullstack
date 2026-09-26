@@ -23,7 +23,8 @@ final class ServerConfig {
     final webRoot = env['WEB_ROOT'] ?? _defaultWebRoot();
 
     return ServerConfig(
-      databaseUrl: env['DATABASE_URL'] ??
+      databaseUrl:
+          env['DATABASE_URL'] ??
           'postgres://conduit:conduit@localhost:5432/conduit?sslmode=disable',
       port: int.tryParse(env['PORT'] ?? '') ?? 8080,
       jwtSecret: secret == null ? null : utf8.encode(secret),
