@@ -82,7 +82,10 @@ final class NewUser with _$NewUser {
       _$NewUserFromJson(json);
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 64), message: 'is too long (maximum is 64 characters)')
+  @Validate(
+    length: Length(max: 64),
+    message: 'is too long (maximum is 64 characters)',
+  )
   final String username;
 
   @Validate(regex: r'\S', message: "can't be blank")
@@ -132,7 +135,10 @@ final class UpdateUser with _$UpdateUser {
   final String? email;
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 64), message: 'is too long (maximum is 64 characters)')
+  @Validate(
+    length: Length(max: 64),
+    message: 'is too long (maximum is 64 characters)',
+  )
   final String? username;
 
   @Validate(
@@ -146,12 +152,12 @@ final class UpdateUser with _$UpdateUser {
 
   /// Only the fields that were set.
   Map<String, Object?> toJson() => {
-        if (email != null) 'email': email,
-        if (username != null) 'username': username,
-        if (password != null) 'password': password,
-        if (bio != null) 'bio': bio,
-        if (image != null) 'image': image,
-      };
+    if (email != null) 'email': email,
+    if (username != null) 'username': username,
+    if (password != null) 'password': password,
+    if (bio != null) 'bio': bio,
+    if (image != null) 'image': image,
+  };
 }
 
 /// `{"user": {...changed fields}}`.

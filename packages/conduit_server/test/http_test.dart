@@ -54,19 +54,26 @@ void main() {
   }
 
   Map<String, Object?> errorsOf(String body) =>
-      (jsonDecode(body) as Map<String, Object?>)['errors']! as Map<String, Object?>;
+      (jsonDecode(body) as Map<String, Object?>)['errors']!
+          as Map<String, Object?>;
 
   test('malformed JSON is a 400 in the RealWorld error shape', () async {
-    final (status, _, body) =
-        await send('POST', '/api/users/login', body: '{not json');
+    final (status, _, body) = await send(
+      'POST',
+      '/api/users/login',
+      body: '{not json',
+    );
 
     expect(status, 400);
     expect(errorsOf(body), contains('body'));
   });
 
   test('JSON of the wrong shape is a 422', () async {
-    final (status, _, body) =
-        await send('POST', '/api/users', body: '{"user": "nope"}');
+    final (status, _, body) = await send(
+      'POST',
+      '/api/users',
+      body: '{"user": "nope"}',
+    );
 
     expect(status, 422);
     expect(errorsOf(body), contains('body'));
@@ -155,23 +162,27 @@ void main() {
     expect(headers.value('allow'), contains('GET'));
   });
 
-  test('any origin may call the API; preflights never reach a handler',
-      () async {
-    final (status, headers, _) = await send(
-      'OPTIONS',
-      '/api/articles',
-      headers: {
-        'origin': 'https://react-conduit.example',
-        'access-control-request-method': 'POST',
-        'access-control-request-headers': 'authorization, content-type',
-      },
-    );
+  test(
+    'any origin may call the API; preflights never reach a handler',
+    () async {
+      final (status, headers, _) = await send(
+        'OPTIONS',
+        '/api/articles',
+        headers: {
+          'origin': 'https://react-conduit.example',
+          'access-control-request-method': 'POST',
+          'access-control-request-headers': 'authorization, content-type',
+        },
+      );
 
-    expect(status, 204);
-    expect(headers.value('access-control-allow-origin'), isNotNull);
-    expect(headers.value('access-control-allow-headers'),
-        contains('authorization'));
-  });
+      expect(status, 204);
+      expect(headers.value('access-control-allow-origin'), isNotNull);
+      expect(
+        headers.value('access-control-allow-headers'),
+        contains('authorization'),
+      );
+    },
+  );
 
   test('client-side routes get the web app, revalidated', () async {
     for (final path in ['/', '/login', '/article/some-slug', '/profile/ada']) {

@@ -14,9 +14,9 @@ final class ApiError implements IntoResponse {
   const ApiError(this.status, this.errors);
 
   ApiError.of(this.status, String key, String problem)
-      : errors = {
-          key: [problem],
-        };
+    : errors = {
+        key: [problem],
+      };
 
   /// 404, keyed by the resource that is missing: `article`, `profile`, ...
   ApiError.notFound(String resource) : this.of(404, resource, 'not found');
@@ -101,11 +101,12 @@ final class RealWorldErrors implements Layer {
 
         final errors = switch (decoded) {
           {'errors': Map<String, Object?> _} => null, // already our shape
-          {'fields': final Map<String, Object?> fields} when fields.isNotEmpty =>
+          {'fields': final Map<String, Object?> fields}
+              when fields.isNotEmpty =>
             fields,
           {'error': final String message} => {
-              _keyFor(response.statusCode): [message],
-            },
+            _keyFor(response.statusCode): [message],
+          },
           _ => null,
         };
         if (errors == null) return response.change(body: text);
@@ -113,10 +114,8 @@ final class RealWorldErrors implements Layer {
         return Response(
           response.statusCode,
           body: jsonEncode({'errors': errors}),
-          headers: {
-            ...response.headers,
-            'content-type': 'application/json',
-          }..remove('content-length'),
+          headers: {...response.headers, 'content-type': 'application/json'}
+            ..remove('content-length'),
         );
       };
     };
@@ -124,10 +123,10 @@ final class RealWorldErrors implements Layer {
 
   /// What a failure with no field of its own is about.
   static String _keyFor(int status) => switch (status) {
-        401 => 'token',
-        403 || 404 => 'resource',
-        405 => 'method',
-        400 || 413 || 415 || 422 => 'body',
-        _ => 'server',
-      };
+    401 => 'token',
+    403 || 404 => 'resource',
+    405 => 'method',
+    400 || 413 || 415 || 422 => 'body',
+    _ => 'server',
+  };
 }

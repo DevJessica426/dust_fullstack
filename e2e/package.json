@@ -1,0 +1,11 @@
+{
+  "name": "conduit-e2e",
+  "private": true,
+  "description": "The official RealWorld front-end E2E suite, run against the Dart Conduit clone.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

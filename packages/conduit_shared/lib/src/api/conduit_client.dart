@@ -10,20 +10,10 @@ import 'conduit_api.dart';
 /// set. Both the browser app and the server's tests use this, which is what
 /// keeps them honest about the same contract.
 final class ConduitClient {
-  ConduitClient({required String baseUrl, this.token, Dio? dio})
-      : dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)) {
+  ConduitClient({required String baseUrl, String? token, Dio? dio})
+    : dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)) {
     this.dio.options.baseUrl = baseUrl;
-    this.dio.interceptors.add(
-          InterceptorsWrapper(
-            onRequest: (options, handler) {
-              final current = token;
-              if (current != null) {
-                options.headers['authorization'] = 'Token $current';
-              }
-              handler.next(options);
-            },
-          ),
-        );
+    this.token = token;
     api = ConduitApi(this.dio);
   }
 
@@ -33,8 +23,24 @@ final class ConduitClient {
   /// The generated client.
   late final ConduitApi api;
 
+  String? _token;
+
   /// The signed-in user's JWT, or null when signed out.
-  String? token;
+  ///
+  /// Kept in Dio's default headers rather than added by an interceptor, so a
+  /// request carries it from the moment it is created: Dio runs interceptors
+  /// on later turns of the event loop, and anything inspecting the request
+  /// before then would see it unauthenticated.
+  String? get token => _token;
+
+  set token(String? value) {
+    _token = value;
+    if (value == null) {
+      dio.options.headers.remove('authorization');
+    } else {
+      dio.options.headers['authorization'] = 'Token $value';
+    }
+  }
 
   /// Releases the underlying connections.
   void close() => dio.close(force: true);
@@ -66,16 +72,29 @@ final class ConduitFailure implements Exception {
       }
       return ConduitFailure(
         response?.statusCode ?? 0,
-        ApiErrors.single(
-          'network',
-          response == null
-              ? 'could not reach the server'
-              : 'answered ${response.statusCode}',
-        ),
+        response == null
+            ? ApiErrors.single(network, 'Unable to connect to the server')
+            : ApiErrors.single(
+                'server',
+                'answered ${response.statusCode} unexpectedly',
+              ),
       );
     }
-    return ConduitFailure(0, ApiErrors.single('error', error.toString()));
+    // Not an HTTP failure at all: a 200 whose body was empty or not the
+    // expected shape. Status 0, like a network failure, because the server
+    // said nothing usable about *who* the caller is.
+    return ConduitFailure(
+      0,
+      ApiErrors.single('server', 'sent a response the app could not read'),
+    );
   }
+
+  /// The key a failure is reported under when no response arrived at all.
+  static const network = 'network';
+
+  /// Whether the server answered with a 4xx: the request, or the caller's
+  /// credentials, were refused. A 5xx or no answer at all is not a refusal.
+  bool get isClientError => status >= 400 && status < 500;
 
   /// The HTTP status, or 0 when no response arrived.
   final int status;

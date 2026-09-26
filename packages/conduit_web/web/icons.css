@@ -1,0 +1,48 @@
+/*
+ * The eight `ion-*` icons the Conduit templates use, drawn as inline SVG
+ * masks so the app loads nothing from a CDN. They take the text colour, like
+ * the Ionicons v2 glyphs they stand in for. Original artwork, MIT with the
+ * rest of this project.
+ */
+[class^='ion-'], [class*=' ion-'] {
+  display: inline-block;
+  font-style: normal;
+  line-height: 1;
+}
+
+[class^='ion-']::before, [class*=' ion-']::before {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.mod-options .ion-trash-a, .tag-pill .ion-close-round {
+  cursor: pointer;
+}
+
+.ion-heart { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 21s-7.4-4.5-9.3-9.1C1.4 8.5 3.5 4.8 7.1 4.8c2 0 3.6 1.1 4.9 2.9 1.3-1.8 2.9-2.9 4.9-2.9 3.6 0 5.7 3.7 4.4 7.1C19.4 16.5 12 21 12 21z'/%3E%3C/svg%3E"); }
+.ion-plus-round { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z'/%3E%3C/svg%3E"); }
+.ion-close-round { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M5.6 3.5 12 9.9l6.4-6.4 2.1 2.1-6.4 6.4 6.4 6.4-2.1 2.1-6.4-6.4-6.4 6.4-2.1-2.1 6.4-6.4-6.4-6.4z'/%3E%3C/svg%3E"); }
+.ion-trash-a { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M9 2h6l1 2h4v2.5H4V4h4zM5.5 8h13l-1.2 14H6.7zM9 10.5v9h1.6v-9zm4.4 0v9H15v-9z'/%3E%3C/svg%3E"); }
+.ion-edit { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M3 17.3V21h3.7L17.6 10.1l-3.7-3.7zM15.4 4.9l3.7 3.7 1.6-1.6a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0z'/%3E%3C/svg%3E"); }
+.ion-compose { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M3 5h10v2H5v12h12v-8h2v10H3zM17.9 2.3l2.8 2.8-8.9 8.9H9v-2.8z'/%3E%3C/svg%3E"); }
+.ion-gear-a { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M10.8 2h2.4l.5 2.7 2 .8 2.3-1.6 1.7 1.7-1.6 2.3.8 2L21.6 10.4v2.4l-2.7.5-.8 2 1.6 2.3-1.7 1.7-2.3-1.6-2 .8-.5 2.7h-2.4l-.5-2.7-2-.8-2.3 1.6-1.7-1.7 1.6-2.3-.8-2L2.4 12.8v-2.4l2.7-.5.8-2L4.3 5.6 6 3.9l2.3 1.6 2-.8zM12 8.4a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4z'/%3E%3C/svg%3E"); }
+.ion-pound { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M9.2 3h2l-.6 5h3.9l.6-5h2l-.6 5H20v2h-3.8l-.5 4H19v2h-3.5l-.6 5h-2l.6-5H9.6l-.6 5H7l.6-5H4v-2h3.8l.5-4H5V8h3.6zm1.1 7-.5 4h3.9l.5-4z'/%3E%3C/svg%3E"); }
+
+/* The retry control shown while the server is unreachable. */
+.navbar .btn-link.nav-link {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.article-loading {
+  padding: 1.5rem 0;
+  color: #999;
+}

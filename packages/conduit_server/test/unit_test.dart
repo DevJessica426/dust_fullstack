@@ -22,8 +22,10 @@ void main() {
     test('an expired token is refused', () {
       final token = codec.issue(42, now: now);
 
-      expect(codec.verify(token, now: now.add(const Duration(days: 31))),
-          isNull);
+      expect(
+        codec.verify(token, now: now.add(const Duration(days: 31))),
+        isNull,
+      );
     });
 
     test('a token whose payload was edited is refused', () {

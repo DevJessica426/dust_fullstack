@@ -18,9 +18,9 @@ Future<Result<ProfileEnvelope, ApiError>> readProfile(Request request) async {
   final username = await request.path<String>('username');
   final db = await request.state<ConduitDatabase>();
 
-  final profile =
-      (await UsersRepo(db.connection).profile(username, viewer?.id ?? 0))
-          .orThrow;
+  final profile = (await UsersRepo(
+    db.connection,
+  ).profile(username, viewer?.id ?? 0)).orThrow;
   return profile == null
       ? Err(ApiError.notFound('profile'))
       : Ok(ProfileEnvelope(profile: profileOf(profile)));

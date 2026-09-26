@@ -53,8 +53,9 @@ Future<Result<UserEnvelope, ApiError>> login(Request request) async {
     ApiError.of(401, 'credentials', 'invalid'),
   );
 
-  final user = (await UsersRepo(db.connection).byEmail(input.email.trim()))
-      .orThrow;
+  final user = (await UsersRepo(
+    db.connection,
+  ).byEmail(input.email.trim())).orThrow;
   if (user == null) {
     // Same work, thrown away, so the timing matches a real account.
     await auth.passwords.verify(input.password, await _decoyHash(auth));
@@ -123,10 +124,10 @@ Future<Result<UserEnvelope, ApiError>> updateUser(Request request) async {
 
 /// Which field a unique violation on `users` was about.
 String? _takenField(SqlxError error) => switch (uniqueViolation(error)) {
-      'users_username_key' => 'username',
-      'users_email_key' => 'email',
-      _ => null,
-    };
+  'users_username_key' => 'username',
+  'users_email_key' => 'email',
+  _ => null,
+};
 
 enum _Sent { asValue, asNull }
 
@@ -135,10 +136,10 @@ enum _Sent { asValue, asNull }
 /// The generated deserializer reads an absent key and an explicit `null` the
 /// same way, which is right for a model and wrong for a patch.
 Map<String, _Sent> _keysOf(Object? json) => {
-      if (json is Map)
-        for (final MapEntry(:key, :value) in json.entries)
-          if (key is String) key: value == null ? _Sent.asNull : _Sent.asValue,
-    };
+  if (json is Map)
+    for (final MapEntry(:key, :value) in json.entries)
+      if (key is String) key: value == null ? _Sent.asNull : _Sent.asValue,
+};
 
 String? _decoy;
 

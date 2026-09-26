@@ -56,7 +56,10 @@ final class NewComment with _$NewComment {
       _$NewCommentFromJson(json);
 
   @Validate(regex: r'\S', message: "can't be blank")
-  @Validate(length: Length(max: 5000), message: 'is too long (maximum is 5000 characters)')
+  @Validate(
+    length: Length(max: 5000),
+    message: 'is too long (maximum is 5000 characters)',
+  )
   final String body;
 }
 

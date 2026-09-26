@@ -87,8 +87,7 @@ Future<(ConduitClient, User)> signUp(TestServer app, [String? name]) async {
         password: 'password123',
       ),
     ),
-  ))
-      .user;
+  )).user;
   anonymous.close();
   return (app.client(token: user.token), user);
 }
@@ -99,18 +98,16 @@ Future<Article> publish(
   String? title,
   List<String> tags = const [],
   String body = 'Some *markdown*.',
-}) async =>
-    (await client.api.createArticle(
-      NewArticleRequest(
-        article: NewArticle(
-          title: title ?? unique('Title'),
-          description: 'A description',
-          body: body,
-          tagList: tags,
-        ),
-      ),
-    ))
-        .article;
+}) async => (await client.api.createArticle(
+  NewArticleRequest(
+    article: NewArticle(
+      title: title ?? unique('Title'),
+      description: 'A description',
+      body: body,
+      tagList: tags,
+    ),
+  ),
+)).article;
 
 /// Runs [call] and returns what the API refused it with.
 ///
@@ -125,12 +122,12 @@ Future<ConduitFailure> refusal(Future<Object?> Function() call) async {
 }
 
 /// Matches a [ConduitFailure] by status and its first `errors` entry.
-Matcher refusedWith(int status, String key, [String? problem]) => isA<
-        ConduitFailure>()
-    .having((f) => f.status, 'status', status)
-    .having((f) => f.errors.errors.keys, 'error keys', contains(key))
-    .having(
-      (f) => f.errors.errors[key],
-      'errors[$key]',
-      problem == null ? isNotEmpty : contains(problem),
-    );
+Matcher refusedWith(int status, String key, [String? problem]) =>
+    isA<ConduitFailure>()
+        .having((f) => f.status, 'status', status)
+        .having((f) => f.errors.errors.keys, 'error keys', contains(key))
+        .having(
+          (f) => f.errors.errors[key],
+          'errors[$key]',
+          problem == null ? isNotEmpty : contains(problem),
+        );
