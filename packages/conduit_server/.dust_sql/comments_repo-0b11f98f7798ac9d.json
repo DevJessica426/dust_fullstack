@@ -1,0 +1,72 @@
+{
+  "version": 3,
+  "entries": [
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "363524f3420ded05",
+      "sql": "\nINSERT INTO comments (article_id, author_id, body)\nVALUES ($1, $2, $3)\nRETURNING id, body, created_at, updated_at\n",
+      "user_parameter_count": 3,
+      "expanded_parameter_count": 3,
+      "fetch_mode": "one",
+      "row_type": "NewCommentRow",
+      "columns": [
+        "id",
+        "body",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "82aabc20ceb573d7",
+      "sql": "\nSELECT c.id, c.body, c.created_at, c.updated_at,\n       u.id AS author_id, u.username AS author_username,\n       u.bio AS author_bio, u.image AS author_image,\n       EXISTS (\n         SELECT 1 FROM follows f WHERE f.follower_id = $2 AND f.followee_id = u.id\n       ) AS author_following\nFROM comments c\nJOIN users u ON u.id = c.author_id\nWHERE c.article_id = $1\nORDER BY c.id DESC\n",
+      "user_parameter_count": 2,
+      "expanded_parameter_count": 2,
+      "fetch_mode": "all",
+      "row_type": "CommentRow",
+      "columns": [
+        "id",
+        "body",
+        "created_at",
+        "updated_at",
+        "author_id",
+        "author_username",
+        "author_bio",
+        "author_image",
+        "author_following"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "9a16b5a0b740247b",
+      "sql": "SELECT id, article_id, author_id FROM comments WHERE id = $1",
+      "user_parameter_count": 1,
+      "expanded_parameter_count": 1,
+      "fetch_mode": "optional",
+      "row_type": "CommentKey",
+      "columns": [
+        "id",
+        "article_id",
+        "author_id"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "a9030e59c28e22e4",
+      "sql": "DELETE FROM comments WHERE id = $1",
+      "user_parameter_count": 1,
+      "expanded_parameter_count": 1,
+      "fetch_mode": "execute",
+      "row_type": null,
+      "columns": []
+    }
+  ]
+}
