@@ -1,0 +1,214 @@
+{
+  "version": 3,
+  "entries": [
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "20b6224940f48ed8",
+      "sql": "\nSELECT a.id, a.slug, a.title, a.description, a.body, a.tag_list,\n       a.created_at, a.updated_at,\n       EXISTS (\n         SELECT 1 FROM favorites fv WHERE fv.user_id = $2 AND fv.article_id = a.id\n       ) AS favorited,\n       (SELECT count(*) FROM favorites fv WHERE fv.article_id = a.id) AS favorites_count,\n       u.id AS author_id, u.username AS author_username,\n       u.bio AS author_bio, u.image AS author_image,\n       EXISTS (\n         SELECT 1 FROM follows f WHERE f.follower_id = $2 AND f.followee_id = u.id\n       ) AS author_following\nFROM articles a\nJOIN users u ON u.id = a.author_id\nWHERE a.slug = $1\n",
+      "user_parameter_count": 2,
+      "expanded_parameter_count": 2,
+      "fetch_mode": "optional",
+      "row_type": "ArticleRow",
+      "columns": [
+        "id",
+        "slug",
+        "title",
+        "description",
+        "body",
+        "tag_list",
+        "created_at",
+        "updated_at",
+        "favorited",
+        "favorites_count",
+        "author_id",
+        "author_username",
+        "author_bio",
+        "author_image",
+        "author_following"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "47e18e1485a88558",
+      "sql": "\nINSERT INTO favorites (user_id, article_id) VALUES ($1, $2)\nON CONFLICT DO NOTHING\n",
+      "user_parameter_count": 2,
+      "expanded_parameter_count": 2,
+      "fetch_mode": "execute",
+      "row_type": null,
+      "columns": []
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "56bd0551f7078dca",
+      "sql": "\nSELECT count(*) AS count\nFROM articles a\nJOIN users u ON u.id = a.author_id\nWHERE ($1::text IS NULL OR a.tag_list @> ARRAY[$1::text])\n  AND ($2::text IS NULL OR u.username = $2::text)\n  AND ($3::text IS NULL OR EXISTS (\n        SELECT 1 FROM favorites fv\n        JOIN users fu ON fu.id = fv.user_id\n        WHERE fv.article_id = a.id AND fu.username = $3::text\n      ))\n",
+      "user_parameter_count": 3,
+      "expanded_parameter_count": 3,
+      "fetch_mode": "one",
+      "row_type": null,
+      "columns": [
+        "count"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "5c9acfbc14290dc8",
+      "sql": "\nSELECT count(*) AS count\nFROM articles a\nJOIN follows f ON f.followee_id = a.author_id AND f.follower_id = $1\n",
+      "user_parameter_count": 1,
+      "expanded_parameter_count": 1,
+      "fetch_mode": "one",
+      "row_type": null,
+      "columns": [
+        "count"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "75a6d85d0629f9c0",
+      "sql": "\nSELECT a.id, a.slug, a.title, a.description, NULL::text AS body, a.tag_list,\n       a.created_at, a.updated_at,\n       EXISTS (\n         SELECT 1 FROM favorites fv WHERE fv.user_id = $6 AND fv.article_id = a.id\n       ) AS favorited,\n       (SELECT count(*) FROM favorites fv WHERE fv.article_id = a.id) AS favorites_count,\n       u.id AS author_id, u.username AS author_username,\n       u.bio AS author_bio, u.image AS author_image,\n       EXISTS (\n         SELECT 1 FROM follows f WHERE f.follower_id = $6 AND f.followee_id = u.id\n       ) AS author_following\nFROM articles a\nJOIN users u ON u.id = a.author_id\nWHERE ($1::text IS NULL OR a.tag_list @> ARRAY[$1::text])\n  AND ($2::text IS NULL OR u.username = $2::text)\n  AND ($3::text IS NULL OR EXISTS (\n        SELECT 1 FROM favorites fv\n        JOIN users fu ON fu.id = fv.user_id\n        WHERE fv.article_id = a.id AND fu.username = $3::text\n      ))\nORDER BY a.created_at DESC, a.id DESC\nLIMIT $4 OFFSET $5\n",
+      "user_parameter_count": 6,
+      "expanded_parameter_count": 6,
+      "fetch_mode": "all",
+      "row_type": "ArticleRow",
+      "columns": [
+        "id",
+        "slug",
+        "title",
+        "description",
+        "body",
+        "tag_list",
+        "created_at",
+        "updated_at",
+        "favorited",
+        "favorites_count",
+        "author_id",
+        "author_username",
+        "author_bio",
+        "author_image",
+        "author_following"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "891693af1956b3fd",
+      "sql": "DELETE FROM articles WHERE id = $1",
+      "user_parameter_count": 1,
+      "expanded_parameter_count": 1,
+      "fetch_mode": "execute",
+      "row_type": null,
+      "columns": []
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "94a4cddb7407263b",
+      "sql": "\nSELECT tag, count(*) AS uses\nFROM articles, unnest(tag_list) AS tag\nGROUP BY tag\nORDER BY count(*) DESC, tag\n",
+      "user_parameter_count": 0,
+      "expanded_parameter_count": 0,
+      "fetch_mode": "all",
+      "row_type": "TagRow",
+      "columns": [
+        "tag",
+        "uses"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "94c8aa5d375e595f",
+      "sql": "DELETE FROM favorites WHERE user_id = $1 AND article_id = $2",
+      "user_parameter_count": 2,
+      "expanded_parameter_count": 2,
+      "fetch_mode": "execute",
+      "row_type": null,
+      "columns": []
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "b6e8ecedd7f995e6",
+      "sql": "\nUPDATE articles\nSET slug = $2, title = $3, description = $4, body = $5, tag_list = $6,\n    updated_at = GREATEST(clock_timestamp(), updated_at + interval '1 microsecond')\nWHERE id = $1\n",
+      "user_parameter_count": 6,
+      "expanded_parameter_count": 6,
+      "fetch_mode": "execute",
+      "row_type": null,
+      "columns": []
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "d56e7e5f2ee100a0",
+      "sql": "\nSELECT id, slug, author_id, title, description, body, tag_list\nFROM articles\nWHERE slug = $1\n",
+      "user_parameter_count": 1,
+      "expanded_parameter_count": 1,
+      "fetch_mode": "optional",
+      "row_type": "ArticleKey",
+      "columns": [
+        "id",
+        "slug",
+        "author_id",
+        "title",
+        "description",
+        "body",
+        "tag_list"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "ea1514b40a8450c1",
+      "sql": "\nSELECT a.id, a.slug, a.title, a.description, NULL::text AS body, a.tag_list,\n       a.created_at, a.updated_at,\n       EXISTS (\n         SELECT 1 FROM favorites fv WHERE fv.user_id = $1 AND fv.article_id = a.id\n       ) AS favorited,\n       (SELECT count(*) FROM favorites fv WHERE fv.article_id = a.id) AS favorites_count,\n       u.id AS author_id, u.username AS author_username,\n       u.bio AS author_bio, u.image AS author_image,\n       TRUE AS author_following\nFROM articles a\nJOIN users u ON u.id = a.author_id\nJOIN follows f ON f.followee_id = a.author_id AND f.follower_id = $1\nORDER BY a.created_at DESC, a.id DESC\nLIMIT $2 OFFSET $3\n",
+      "user_parameter_count": 3,
+      "expanded_parameter_count": 3,
+      "fetch_mode": "all",
+      "row_type": "ArticleRow",
+      "columns": [
+        "id",
+        "slug",
+        "title",
+        "description",
+        "body",
+        "tag_list",
+        "created_at",
+        "updated_at",
+        "favorited",
+        "favorites_count",
+        "author_id",
+        "author_username",
+        "author_bio",
+        "author_image",
+        "author_following"
+      ]
+    },
+    {
+      "driver": "postgres",
+      "migrations": "./migrations",
+      "schema_hash": "103be9918f307b5b",
+      "sql_hash": "f75c7e2d746d8424",
+      "sql": "\nINSERT INTO articles (slug, title, description, body, tag_list, author_id)\nVALUES ($1, $2, $3, $4, $5, $6)\nRETURNING id\n",
+      "user_parameter_count": 6,
+      "expanded_parameter_count": 6,
+      "fetch_mode": "one",
+      "row_type": null,
+      "columns": [
+        "id"
+      ]
+    }
+  ]
+}

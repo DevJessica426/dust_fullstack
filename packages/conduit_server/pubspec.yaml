@@ -1,0 +1,23 @@
+name: conduit_server
+description: >-
+  The RealWorld "Conduit" API on dust_server and PostgreSQL, answering with the
+  same Dust models the browser decodes.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace
+
+dependencies:
+  conduit_shared: any
+  crypto: ^3.0.6
+  cryptography: ^2.9.0
+  dust_dart: 0.2.0
+  dust_db_postgres: 0.2.0
+  dust_server: 0.2.0
+  postgres: ^3.5.0
+
+dev_dependencies:
+  test: ^1.26.0
