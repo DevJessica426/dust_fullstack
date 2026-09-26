@@ -220,51 +220,69 @@ only change to the upstream suite is documented in [`e2e/README.md`](e2e/README.
 ### Dust findings
 
 This was also a test drive of Dust 0.2.0, which is still `main`. Each item
-below was reproduced on its own, then checked against the open and closed
+below was reproduced on its own and checked against the open and closed
 issues on [y3l1n4ung/dust](https://github.com/y3l1n4ung/dust/issues).
 
-**Not in the tracker yet**
+**Reported from this project**
 
-1. **Nullability alias markers break at runtime** (both drivers). `docs/usage/db.md`
-   and #501 have `count(*) AS "total!"` override nullability, and the generator
-   emits `row.read<int>('total')` with the marker stripped. Neither
-   `dust_db_postgres` nor `dust_db_sqlite3` strips it when indexing result
-   columns, so the read fails. For `SELECT 42 AS "total!"`, Postgres says
-   *`result has no column total`* and SQLite says *`Column total is null`*
-   (it isn't; it's 42). This project uses no markers.
-2. **`dust db build` ignores edited migrations once its cache is warm.** The
-   cache key is the Dart library's source hash plus package config and tool
-   (`matches_cache_metadata` in `dust_driver`); migration files aren't in it.
-   After an edit, `dust db build` reports `cached: 5` and the generated
-   `database.g.dart` still embeds the old SQL. `dust check --db --offline`
-   then fails with a misleading *`missing entry for UsersRepo.insert`*. Only an
-   online `dust check --db` reports it as stale. It's a sibling of #514, which
-   fixed the cross-library case. Workaround: `dust build --clean`.
+1. **Nullability alias markers break at runtime** (both drivers;
+   [dust#584]). `docs/usage/db.md` and [dust#501] have `count(*) AS "total!"`
+   override nullability, and the generator emits `row.read<int>('total')`
+   with the marker stripped. Neither `dust_db_postgres` nor `dust_db_sqlite3`
+   strips it when indexing result columns, so the read fails. For
+   `SELECT 42 AS "total!"`, Postgres says *`PostgreSQL result has no column
+   total`* and SQLite says *`Column total is null`* (it isn't; it's 42). This
+   project uses no markers.
+2. **`dust db build` ignores edited migrations once its cache is warm**
+   ([dust#585]). The cache key is the Dart library's source hash plus package
+   config and tool (`matches_cache_metadata` in `dust_driver`); migration
+   files aren't in it. After an edit, `dust db build` reports `cached: 5` and
+   the generated `database.g.dart` still embeds the old SQL.
+   `dust check --db --offline` then fails with a misleading *`missing entry
+   for UsersRepo.insert`*. Only an online `dust check --db` reports it as
+   stale. It's a sibling of [dust#514], which fixed the cross-library case.
+   Workaround: `dust build --clean`.
 3. **At a pub workspace root, `dust build` and `dust check` scan 0 libraries and
-   report success**, so a CI step run from the repository root is green without
-   checking anything. `dust doctor` says `workspace: ok libraries: 0`.
-4. **dust_server's recommended API + web app setup turns API typos into 200s.**
-   With `nest('/api', api)` and `fallback(staticFiles(dir, html: true))`, as
-   in `docs/dust_server/web-apps.md`, `GET /api/nots` returns the HTML shell with
+   exit 0** ([dust#586]), so a CI step run from the repository root is green
+   without checking anything. `dust doctor` says `workspace: ok libraries: 0`.
+4. **dust_server's recommended API + web app setup turns API typos into 200s**
+   ([dust#587]). With `nest('/api', api)` and
+   `fallback(staticFiles(dir, html: true))`, as in
+   `docs/dust_server/web-apps.md`, `GET /api/nots` returns the HTML shell with
    status 200 instead of a JSON 404. A `fallback` on the `/api` router doesn't
    help, because only the outermost one is read. Fixed here in the root
    fallback.
 5. `--root .` from inside a workspace member fails with *`no shared package
    configuration was found above it`*; the same directory given as an
-   absolute path works.
+   absolute path works ([dust#588]).
 6. `FromRow` can't map `List<T>` fields, although the Postgres driver already
-   decodes arrays. `TEXT[]` needs a `SqlxTryFrom` converter
+   decodes arrays ([dust#589]). `TEXT[]` needs a `SqlxTryFrom` converter
    ([`TextArray`](packages/conduit_server/lib/src/db/rows.dart)).
 7. `@Validate(regex:, message:)` accepts only string literals; a `const`
    reference fails with *`expects a string literal`*, which the validation
-   guide doesn't mention.
+   guide doesn't mention ([dust#590]).
 
-**Already tracked, and hit here too:** naming the violated constraint (#570;
-this server reads `ServerException.constraintName` directly), mapping database
-failures to HTTP statuses (#571; done by hand in `ApiError`), and generated
-routes for handler annotations (#548; the server uses the runtime API).
-Reversible migrations are supported (#257), but there's no revert command yet,
-hence [`tool/db_revert.sh`](tool/db_revert.sh).
+**Already tracked, and hit here too:** naming the violated constraint
+([dust#570]; this server reads `ServerException.constraintName` directly),
+mapping database failures to HTTP statuses ([dust#571]; done by hand in
+`ApiError`), and generated routes for handler annotations ([dust#548]; the
+server uses the runtime API). Reversible migrations are supported
+([dust#257]), but there's no revert command yet, hence
+[`tool/db_revert.sh`](tool/db_revert.sh).
+
+[dust#257]: https://github.com/y3l1n4ung/dust/issues/257
+[dust#501]: https://github.com/y3l1n4ung/dust/issues/501
+[dust#514]: https://github.com/y3l1n4ung/dust/issues/514
+[dust#548]: https://github.com/y3l1n4ung/dust/issues/548
+[dust#570]: https://github.com/y3l1n4ung/dust/issues/570
+[dust#571]: https://github.com/y3l1n4ung/dust/issues/571
+[dust#584]: https://github.com/y3l1n4ung/dust/issues/584
+[dust#585]: https://github.com/y3l1n4ung/dust/issues/585
+[dust#586]: https://github.com/y3l1n4ung/dust/issues/586
+[dust#587]: https://github.com/y3l1n4ung/dust/issues/587
+[dust#588]: https://github.com/y3l1n4ung/dust/issues/588
+[dust#589]: https://github.com/y3l1n4ung/dust/issues/589
+[dust#590]: https://github.com/y3l1n4ung/dust/issues/590
 
 **Not Dust bugs, for completeness:** Dio's interceptor chain yielding to the
 event loop, which the browser handles in
